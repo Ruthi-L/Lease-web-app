@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum LeaseStatus {
+  DRAFT
+  PENDING_TENANTS
+  PENDING_LANDLORD
+  COMPLETED
+}
+
+model Landlord {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  phone        String?
+  civicAddress String?
+  createdAt    DateTime @default(now())
+  leases       Lease[]
+  sessions     AuthSession[]
+}
+
+model AuthSession {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  landlordId String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  landlord   Landlord @relation(fields: [landlordId], references: [id], onDelete: Cascade)
+
+  @@index([landlordId])
+  @@index([expiresAt])
+}
+
+model Lease {
+  id         String      @id @default(cuid())
+  landlordId String
+  status     LeaseStatus @default(DRAFT)
+  formData   Json
+  createdAt  DateTime    @default(now())
+  landlordSignatureData String?
+  landlordSignedAt     DateTime?
+  landlord   Landlord    @relation(fields: [landlordId], references: [id], onDelete: Cascade)
+  tenants    Tenant[]
+
+  @@index([landlordId])
+  @@index([status])
+}
+
+model Tenant {
+  id           String    @id @default(cuid())
+  leaseId      String
+  firstName    String
+  lastName     String
+  email        String
+  phone        String?
+  dateOfBirth  DateTime
+  isMinor      Boolean   @default(false)
+  accessToken  String?   @unique
+  signatureData String?
+  signed_at    DateTime?
+  invitationSentAt DateTime?
+  sectionData  Json
+  lease        Lease     @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+
+  @@index([leaseId])
+  @@index([email])
+}
