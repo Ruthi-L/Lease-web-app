@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentLandlord } from "@/lib/auth";
 import { sendEmail } from "@/lib/mail";
 
-type TenantInput = { firstName: string; lastName: string; email: string; phone: string; dateOfBirth: string; isMinor: boolean };
+type TenantInput = { firstName: string; initial?: string; lastName: string; email: string; phone: string; dateOfBirth: string };
 type LeasePayload = {
   landlord: { name: string; email: string; phone: string; civicAddress: string; password: string };
   sections: Record<string, Record<string, string>>;
@@ -15,6 +15,14 @@ type LeasePayload = {
 function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
   return `${salt}:${scryptSync(password, salt, 64).toString("hex")}`;
+}
+
+function isMinorFromDate(dateOfBirth: Date) {
+  const today = new Date();
+  let age = today.getUTCFullYear() - dateOfBirth.getUTCFullYear();
+  const birthdayPassed = today.getUTCMonth() > dateOfBirth.getUTCMonth() || (today.getUTCMonth() === dateOfBirth.getUTCMonth() && today.getUTCDate() >= dateOfBirth.getUTCDate());
+  if (!birthdayPassed) age -= 1;
+  return age < 18;
 }
 
 export async function POST(request: Request) {
@@ -27,20 +35,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Add at least one tenant or occupant before submitting." }, { status: 400 });
     }
 
-    const adultCount = payload.tenants.filter((tenant) => !tenant.isMinor).length;
+    const adultCount = payload.tenants.filter((tenant) => !isMinorFromDate(new Date(`${tenant.dateOfBirth}T00:00:00.000Z`))).length;
     let adultIndex = 0;
     const tenantData = payload.tenants.map((tenant) => {
-      const accessToken = tenant.isMinor ? null : randomBytes(32).toString("hex");
-      adultIndex += tenant.isMinor ? 0 : 1;
+      const dateOfBirth = new Date(`${tenant.dateOfBirth}T00:00:00.000Z`);
+      const isMinor = isMinorFromDate(dateOfBirth);
+      const accessToken = isMinor ? null : randomBytes(32).toString("hex");
+      adultIndex += isMinor ? 0 : 1;
       return {
         firstName: tenant.firstName,
         lastName: tenant.lastName,
         email: tenant.email,
         phone: tenant.phone || null,
-        dateOfBirth: new Date(`${tenant.dateOfBirth}T00:00:00.000Z`),
-        isMinor: tenant.isMinor,
+        dateOfBirth,
+        isMinor,
         accessToken,
-        sectionData: { role: tenant.isMinor ? "Occupant" : "Tenant", hasSigningRights: !tenant.isMinor, signingOrder: tenant.isMinor ? null : adultIndex },
+        sectionData: { role: isMinor ? "Occupant" : "Tenant", hasSigningRights: !isMinor, signingOrder: isMinor ? null : adultIndex, initial: tenant.initial ?? "" },
       };
     });
 
