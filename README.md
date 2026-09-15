@@ -10,10 +10,10 @@ Install dependencies and generate the Prisma client:
 ```bash
 npm install
 npx prisma generate
-npx prisma migrate dev --name init
+npx prisma migrate deploy
 ```
 
-The local SQLite database is configured through `DATABASE_URL="file:./dev.db"` in `.env`.
+The application uses PostgreSQL. Set `DATABASE_URL` in `.env` for local development and in Vercel for production. The production build runs `prisma migrate deploy` before compiling Next.js.
 
 Start the development server:
 

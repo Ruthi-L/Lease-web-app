@@ -59,11 +59,22 @@ export async function POST(request: Request) {
     });
 
     const baseUrl = process.env.APP_URL ?? new URL(request.url).origin;
-    await Promise.all(lease.tenants.filter((tenant) => tenant.accessToken).map(async (tenant) => {
-      await prisma.tenant.update({ where: { id: tenant.id }, data: { invitationSentAt: new Date() } });
-      await sendEmail(tenant.email, "Your rental application is ready to complete", `Hello ${tenant.firstName},\n\nPlease complete and sign your rental application here:\n${baseUrl}/tenant/sign/${tenant.accessToken}\n\nThis secure link is unique to you.`);
+    const signingLinks = lease.tenants.filter((tenant) => tenant.accessToken).map((tenant) => ({ tenantId: tenant.id, name: `${tenant.firstName} ${tenant.lastName}`, phone: tenant.phone, email: tenant.email, url: `/tenant/sign/${tenant.accessToken}`, pending: !tenant.signed_at }));
+    const emailResults = await Promise.all(signingLinks.map(async (link) => {
+      const tenant = lease.tenants.find((candidate) => candidate.id === link.tenantId);
+      if (!tenant) return { sent: false, error: "Tenant record not found." };
+      try {
+        await sendEmail(tenant.email, "Your rental application is ready to complete", `Hello ${tenant.firstName},\n\nPlease complete and sign your rental application here:\n${baseUrl}/tenant/sign/${tenant.accessToken}\n\nThis secure link is unique to you.`);
+        await prisma.tenant.update({ where: { id: tenant.id }, data: { invitationSentAt: new Date() } });
+        return { sent: true };
+      } catch (emailError) {
+        console.error(`Invitation email failed for ${tenant.email}`, emailError);
+        return { sent: false, error: emailError instanceof Error ? emailError.message : "Email delivery failed." };
+      }
     }));
-    return NextResponse.json({ leaseId: lease.id, signingLinks: lease.tenants.filter((tenant) => tenant.accessToken).map((tenant) => ({ tenantId: tenant.id, name: `${tenant.firstName} ${tenant.lastName}`, phone: tenant.phone, email: tenant.email, url: `/tenant/sign/${tenant.accessToken}`, pending: !tenant.signed_at })) }, { status: 201 });
+    const failedEmails = emailResults.filter((result) => !result.sent);
+    if (failedEmails.length) return NextResponse.json({ leaseId: lease.id, signingLinks, error: failedEmails[0].error, emailDeliveryFailed: true }, { status: 502 });
+    return NextResponse.json({ leaseId: lease.id, signingLinks }, { status: 201 });
   } catch (error) {
     console.error("Lease creation failed", error);
     return NextResponse.json({ error: "Unable to save this lease right now." }, { status: 500 });
