@@ -20,13 +20,25 @@ function formatValue(value: PdfValue) {
 
 function flatten(value: PdfValue, prefix = "") {
   const rows: { name: string; value: string }[] = [];
-  if (value && typeof value === "object" && !Array.isArray(value)) {
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => {
+      const name = prefix ? `${prefix} [${index + 1}]` : `Entry ${index + 1}`;
+      if (item && typeof item === "object") rows.push(...flatten(item, name));
+      else rows.push({ name, value: formatValue(item) });
+    });
+    return rows;
+  }
+
+  if (value && typeof value === "object") {
     Object.entries(value).forEach(([key, child]) => {
       const name = prefix ? `${prefix} - ${label(key)}` : label(key);
-      if (child && typeof child === "object" && !Array.isArray(child)) rows.push(...flatten(child, name));
+      if (child && typeof child === "object") rows.push(...flatten(child, name));
       else rows.push({ name, value: formatValue(child) });
     });
+    return rows;
   }
+
+  if (prefix) rows.push({ name: prefix, value: formatValue(value) });
   return rows;
 }
 
@@ -54,8 +66,14 @@ export async function GET(request: Request, { params }: RouteContext) {
   const pdf = await PDFDocument.create();
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-  const formData = tenant.lease.formData as PdfValue;
-  const rows = flatten(formData);
+  const rawFormData = tenant.lease.formData as PdfValue | null | undefined;
+  const rows = rawFormData && typeof rawFormData === "object" ? flatten(rawFormData) : [
+    { name: "Landlord", value: tenant.lease.landlord.name || "Not provided" },
+    { name: "Tenant", value: `${tenant.firstName} ${tenant.lastName}` },
+    { name: "Lease created", value: tenant.lease.createdAt.toISOString() },
+    { name: "Status", value: tenant.lease.status },
+    { name: "Contact email", value: tenant.email },
+  ];
   let page = pdf.addPage([612, 792]);
   let y = 744;
   const margin = 48;
@@ -85,6 +103,14 @@ export async function GET(request: Request, { params }: RouteContext) {
     y = addWrappedText(page, `${name}: ${value}`, margin, y, contentWidth, regular, 9);
     y -= 6;
   });
+
+  if (!rows.length) {
+    ensureSpace(24);
+    y -= 12;
+    page.drawText("Legacy lease record", { x: margin, y, size: 12, font: bold, color: rgb(0.12, 0.42, 0.31) });
+    y -= 18;
+    y = addWrappedText(page, "No structured PDF fields were found for this lease. This summary is a fallback for older records.", margin, y, contentWidth, regular, 9, rgb(0.35, 0.4, 0.37));
+  }
 
   ensureSpace(54);
   y -= 12;
