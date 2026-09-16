@@ -2,8 +2,7 @@
 
 :root { --ink: #202a27; --muted: #718078; --line: #dce4df; --paper: #f6f8f5; --mint: #dcefe2; --green: #236b4e; --coral: #dd765c; }
 * { box-sizing: border-box; }
-html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
-body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Segoe UI", "Helvetica Neue", sans-serif; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: Arial, Helvetica, sans-serif; }
 button, input, textarea { font: inherit; }
 button { cursor: pointer; }
 .wizard-shell { min-height: 100vh; display: grid; grid-template-columns: minmax(280px, 34%) 1fr; }
@@ -32,18 +31,7 @@ label { display: flex; flex-direction: column; gap: 9px; color: #53645b; font-si
 input, textarea { border: 0; border-bottom: 1px solid #bccbc1; background: transparent; color: var(--ink); padding: 10px 0; outline: none; border-radius: 0; font-size: 16px; font-weight: 400; }
 input:focus, textarea:focus { border-color: var(--green); box-shadow: 0 1px 0 var(--green); }
 textarea { min-height: 90px; resize: vertical; }
-select { border: 0; border-bottom: 1px solid #bccbc1; background: transparent; color: var(--ink); padding: 10px 0; outline: none; border-radius: 0; font-size: 16px; }
-select:focus { border-color: var(--green); box-shadow: 0 1px 0 var(--green); }
 .full-width { grid-column: 1 / -1; }
-.form-block { display: grid; gap: 24px; }
-.form-block h3 { margin: 0; font: 400 26px Georgia, serif; }
-.choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.choice-card { display: flex; flex-direction: row; align-items: center; gap: 10px; border: 1px solid var(--line); padding: 16px; background: rgba(255,255,255,.35); color: var(--ink); font-size: 13px; }
-.choice-card input { width: 16px; height: 16px; accent-color: var(--green); }
-.checkbox-group { border: 0; padding: 0; margin: 0; }
-.checkbox-group legend { color: #53645b; font-size: 12px; font-weight: 700; margin-bottom: 12px; }
-.checkbox-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 18px; }
-.legal-note { color: var(--muted); font-size: 13px; line-height: 1.7; margin: 0; }
 .tenant-section { display: grid; gap: 18px; }
 .tenant-intro { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; margin-bottom: 4px; }
 .tenant-intro h3 { margin: 0 0 7px; font: 400 25px Georgia, serif; }
@@ -123,4 +111,4 @@ small { color: var(--green); font-weight: 400; font-size: 11px; }
 .confirmation-meta { display: grid; grid-template-columns: 110px 1fr; gap: 12px 18px; margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 13px; }
 .confirmation-meta span { color: var(--muted); }
 @media (max-width: 800px) { .wizard-shell { grid-template-columns: 1fr; } .sidebar { padding: 28px 24px 24px; } .brand-mark { margin-bottom: 35px; } .sidebar h1 { font-size: 42px; } .progress-list { grid-template-columns: repeat(4, 1fr); gap: 2px; margin-top: 30px; } .progress-item { display: block; padding: 7px; } .progress-item strong { display: none; } .form-header { padding: 30px 24px; } .form-content { padding: 32px 24px; } .form-footer { padding: 18px 24px; } }
-@media (max-width: 540px) { .field-grid { grid-template-columns: 1fr; } .full-width { grid-column: auto; } .save-state { display: none; } .tenant-intro { display: block; } .count-pill { display: inline-block; margin-top: 14px; } .signing-link { align-items: flex-start; flex-direction: column; } .link-actions { justify-content: flex-start; } .signing-page { padding: 0; } .signing-card { border: 0; box-shadow: none; } .signing-header { padding: 34px 24px; } .signing-form { padding: 0 24px 34px; } .signing-section { grid-template-columns: 30px 1fr; gap: 10px; } .confirmation-card { padding: 40px 24px; } .auth-card { padding: 32px 24px; } .dashboard-header { display: block; } .dashboard-header .secondary-button { display: inline-block; margin-top: 20px; } .tenant-row { align-items: flex-start; flex-direction: column; } .choice-grid, .checkbox-grid { grid-template-columns: 1fr; } }
+@media (max-width: 540px) { .field-grid { grid-template-columns: 1fr; } .full-width { grid-column: auto; } .save-state { display: none; } .tenant-intro { display: block; } .count-pill { display: inline-block; margin-top: 14px; } .signing-link { align-items: flex-start; flex-direction: column; } .link-actions { justify-content: flex-start; } .signing-page { padding: 0; } .signing-card { border: 0; box-shadow: none; } .signing-header { padding: 34px 24px; } .signing-form { padding: 0 24px 34px; } .signing-section { grid-template-columns: 30px 1fr; gap: 10px; } .confirmation-card { padding: 40px 24px; } .auth-card { padding: 32px 24px; } .dashboard-header { display: block; } .dashboard-header .secondary-button { display: inline-block; margin-top: 20px; } .tenant-row { align-items: flex-start; flex-direction: column; } }

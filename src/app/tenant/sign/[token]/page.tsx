@@ -18,16 +18,21 @@ export default async function TenantSignPage({ params }: TenantSignPageProps) {
   if (!tenant || tenant.isMinor) notFound();
 
   return (
-    <TenantSigningForm
-      token={token}
-      tenant={{
-        firstName: tenant.firstName,
-        lastName: tenant.lastName,
-        email: tenant.email,
-        signedAt: tenant.signed_at?.toISOString() ?? null,
-        signatureData: tenant.signatureData,
-      }}
-      leaseCreatedAt={tenant.lease.createdAt.toISOString()}
-    />
+    <div className="tenant-review-page">
+      <a className="pdf-review-link" href={`/api/tenant/sign/${token}/pdf`} target="_blank" rel="noreferrer">
+        Review homeowner-completed lease PDF
+      </a>
+      <TenantSigningForm
+        token={token}
+        tenant={{
+          firstName: tenant.firstName,
+          lastName: tenant.lastName,
+          email: tenant.email,
+          signedAt: tenant.signed_at?.toISOString() ?? null,
+          signatureData: tenant.signatureData,
+        }}
+        leaseCreatedAt={tenant.lease.createdAt.toISOString()}
+      />
+    </div>
   );
 }
