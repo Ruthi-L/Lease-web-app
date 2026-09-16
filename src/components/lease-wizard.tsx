@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import Link from "next/link";
 
 type Tenant = {
   firstName: string;
@@ -686,6 +687,7 @@ export default function LeaseWizard() {
         <span className="eyebrow">Form P / 2026</span>
         <h1>Build a lease that feels clear.</h1>
         <p className="sidebar-copy">Move through the agreement one calm decision at a time, preserving the official Nova Scotia Form P structure as you go.</p>
+        <Link className="sidebar-login-link" href="/landlord/login">Landlord sign-in <span>→</span></Link>
 
         <div className="progress-list">
           {stepMeta.map((section, index) => (
