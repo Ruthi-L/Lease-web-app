@@ -63,7 +63,8 @@ export async function POST(request: Request, { params }: RouteContext) {
 
     const completedLease = await prisma.lease.findUnique({ where: { id: tenant.leaseId }, include: { landlord: true, tenants: true } });
     if (completedLease) {
-      await sendEmail(completedLease.landlord.email, "A tenant signed your rental application", `${tenant.firstName} ${tenant.lastName} has completed their signature. Review the application in your landlord dashboard.`);
+      const dashboardUrl = `${process.env.APP_URL ?? new URL(request.url).origin}/dashboard`;
+      await sendEmail(completedLease.landlord.email, "A tenant signed your rental application", `${tenant.firstName} ${tenant.lastName} has completed their signature. Review the application in your landlord dashboard:\n${dashboardUrl}\n\nLog in with your landlord account to review it.`);
       const allSigned = completedLease.landlordSignedAt && completedLease.tenants.filter((candidate) => !candidate.isMinor).every((candidate) => candidate.signed_at);
       if (allSigned) {
         await Promise.all(completedLease.tenants.filter((candidate) => !candidate.isMinor).map((candidate) => sendEmail(candidate.email, "Your completed rental agreement", "All required parties have signed the rental agreement. Your completed agreement is now available from the landlord.")));

@@ -2,7 +2,7 @@ import { randomBytes, scryptSync } from "node:crypto";
 import { NextResponse } from "next/server";
 import { LeaseStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getCurrentLandlord } from "@/lib/auth";
+import { createSession, getCurrentLandlord } from "@/lib/auth";
 import { sendEmail } from "@/lib/mail";
 
 type TenantInput = { firstName: string; initial?: string; lastName: string; email: string; phone: string; dateOfBirth: string };
@@ -67,6 +67,7 @@ export async function POST(request: Request) {
         include: { tenants: true },
       });
     });
+    if (!currentLandlord) await createSession(lease.landlordId);
 
     const baseUrl = process.env.APP_URL ?? new URL(request.url).origin;
     const signingLinks = lease.tenants.filter((tenant) => tenant.accessToken).map((tenant) => ({ tenantId: tenant.id, name: `${tenant.firstName} ${tenant.lastName}`, phone: tenant.phone, email: tenant.email, url: `/tenant/sign/${tenant.accessToken}`, pending: !tenant.signed_at }));
