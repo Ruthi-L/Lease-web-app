@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendEmail } from "@/lib/mail";
+import { buildLeasePdfAttachment, sendEmail } from "@/lib/mail";
 
 type SignPayload = {
   emergencyContactName: string;
@@ -66,7 +66,18 @@ export async function POST(request: Request, { params }: RouteContext) {
       await sendEmail(completedLease.landlord.email, "A tenant signed your rental application", `${tenant.firstName} ${tenant.lastName} has completed their signature. Review the application in your landlord dashboard.`);
       const allSigned = completedLease.landlordSignedAt && completedLease.tenants.filter((candidate) => !candidate.isMinor).every((candidate) => candidate.signed_at);
       if (allSigned) {
-        await Promise.all(completedLease.tenants.filter((candidate) => !candidate.isMinor).map((candidate) => sendEmail(candidate.email, "Your completed rental agreement", "All required parties have signed the rental agreement. Your completed agreement is now available from the landlord.")));
+        const attachment = await buildLeasePdfAttachment({
+          id: completedLease.id,
+          createdAt: completedLease.createdAt,
+          landlord: { name: completedLease.landlord.name, email: completedLease.landlord.email },
+          formData: completedLease.formData,
+          tenants: completedLease.tenants.map((candidate) => ({ firstName: candidate.firstName, lastName: candidate.lastName, email: candidate.email, isMinor: candidate.isMinor })),
+        });
+
+        await Promise.all([
+          sendEmail(completedLease.landlord.email, "Signed lease agreement", "All required parties have signed the lease. Please find the final PDF attached.", [attachment]),
+          ...completedLease.tenants.filter((candidate) => !candidate.isMinor).map((candidate) => sendEmail(candidate.email, "Signed lease agreement", "All required parties have signed the lease. Please find the final PDF attached.", [attachment]))
+        ]);
       }
     }
 

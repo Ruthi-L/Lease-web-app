@@ -10,11 +10,13 @@
   },
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.10.0",
+    "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "@types/better-sqlite3": "^9.6.0",
     "better-sqlite3": "^13.0.3",
     "next": "16.3.5",
     "nodemailer": "^10.0.10",
+    "pdf-lib": "^1.17.1",
     "prisma": "^7.10.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
