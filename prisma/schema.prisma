@@ -4,14 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-}
-
-enum LeaseStatus {
-  DRAFT
-  PENDING_TENANTS
-  PENDING_LANDLORD
-  COMPLETED
+  provider = "sqlite"
 }
 
 model Landlord {
@@ -41,7 +34,7 @@ model AuthSession {
 model Lease {
   id         String      @id @default(cuid())
   landlordId String
-  status     LeaseStatus @default(DRAFT)
+  status     String      @default("DRAFT")
   formData   Json
   createdAt  DateTime    @default(now())
   landlordSignatureData String?

@@ -26,12 +26,16 @@ export default async function TenantSignPage({ params }: TenantSignPageProps) {
         token={token}
         tenant={{
           firstName: tenant.firstName,
+          initial: String((tenant.sectionData as { initial?: string } | null)?.initial ?? ""),
           lastName: tenant.lastName,
           email: tenant.email,
+          phone: tenant.phone ?? "",
+          dateOfBirth: tenant.dateOfBirth.toISOString().slice(0, 10),
           signedAt: tenant.signed_at?.toISOString() ?? null,
           signatureData: tenant.signatureData,
         }}
         leaseCreatedAt={tenant.lease.createdAt.toISOString()}
+        leaseSections={tenant.lease.formData as Record<string, Record<string, unknown>>}
       />
     </div>
   );

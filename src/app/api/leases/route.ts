@@ -1,6 +1,5 @@
 import { randomBytes, scryptSync } from "node:crypto";
 import { NextResponse } from "next/server";
-import { LeaseStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentLandlord } from "@/lib/auth";
 import { sendEmail } from "@/lib/mail";
@@ -52,7 +51,7 @@ export async function POST(request: Request) {
       });
 
       return transaction.lease.create({
-        data: { landlordId: landlord.id, status: adultCount ? LeaseStatus.PENDING_TENANTS : LeaseStatus.PENDING_LANDLORD, formData: normalizeFormPData(payload.sections), tenants: { create: tenantData } },
+        data: { landlordId: landlord.id, status: adultCount ? "PENDING_TENANTS" : "PENDING_LANDLORD", formData: normalizeFormPData(payload.sections), tenants: { create: tenantData } },
         include: { tenants: true },
       });
     });

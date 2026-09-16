@@ -55,30 +55,6 @@ function formPRows(formData: unknown) {
   return rows;
 }
 
-function flatten(value: unknown, prefix = ""): Array<{ name: string; value: string }> {
-  const rows: Array<{ name: string; value: string }> = [];
-  if (Array.isArray(value)) {
-    value.forEach((item, index) => {
-      const name = prefix ? `${prefix} [${index + 1}]` : `Entry ${index + 1}`;
-      if (item && typeof item === "object") rows.push(...flatten(item, name));
-      else rows.push({ name, value: formatValue(item) });
-    });
-    return rows;
-  }
-
-  if (value && typeof value === "object") {
-    Object.entries(value as Record<string, unknown>).forEach(([key, child]) => {
-      const name = prefix ? `${prefix} - ${label(key)}` : label(key);
-      if (child && typeof child === "object") rows.push(...flatten(child, name));
-      else rows.push({ name, value: formatValue(child) });
-    });
-    return rows;
-  }
-
-  if (prefix) rows.push({ name: prefix, value: formatValue(value) });
-  return rows;
-}
-
 export async function buildLeasePdfAttachment(lease: LeasePdfInput): Promise<MailAttachment> {
   const pdf = await PDFDocument.create();
   const regular = await pdf.embedFont(StandardFonts.Helvetica);

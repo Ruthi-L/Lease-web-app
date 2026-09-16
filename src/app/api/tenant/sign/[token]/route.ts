@@ -3,12 +3,26 @@ import { prisma } from "@/lib/prisma";
 import { buildLeasePdfAttachment, sendEmail } from "@/lib/mail";
 
 type SignPayload = {
+  firstName: string;
+  initial?: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  dateOfBirth: string;
+  otherOccupants: string;
+  leaseType: string;
+  periodicFrequency: string;
+  startDate: string;
+  endDate: string;
   emergencyContactName: string;
   emergencyContactPhone: string;
   serviceEmail: string;
   acknowledgeTruth: boolean;
   acknowledgeElectronicDelivery: boolean;
   acknowledgeAgreement: boolean;
+  acknowledgeActCopy: boolean;
+  acknowledgeSignedLeaseCopy: boolean;
+  acknowledgeBuildingRules: boolean;
   signatureData: string;
 };
 
@@ -28,7 +42,9 @@ export async function POST(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: "This signing link is invalid or has expired." }, { status: 404 });
     }
 
-    if (!payload.emergencyContactName || !payload.emergencyContactPhone || !payload.serviceEmail || !payload.acknowledgeTruth || !payload.acknowledgeElectronicDelivery || !payload.acknowledgeAgreement || !isPngDataUrl(payload.signatureData)) {
+    if (tenant.signed_at) return NextResponse.json({ error: "This signing link has already been completed and is locked." }, { status: 409 });
+
+    if (!payload.firstName || !payload.lastName || !payload.email || !payload.phone || !payload.dateOfBirth || !payload.emergencyContactName || !payload.emergencyContactPhone || !payload.serviceEmail || !payload.leaseType || !payload.startDate || (payload.leaseType === "Periodic" && !payload.periodicFrequency) || (payload.leaseType === "Fixed-term" && !payload.endDate) || !payload.acknowledgeTruth || !payload.acknowledgeElectronicDelivery || !payload.acknowledgeAgreement || !payload.acknowledgeActCopy || !payload.acknowledgeSignedLeaseCopy || !payload.acknowledgeBuildingRules || !isPngDataUrl(payload.signatureData)) {
       return NextResponse.json({ error: "Complete all fields and save your signature before submitting." }, { status: 400 });
     }
 
@@ -38,6 +54,11 @@ export async function POST(request: Request, { params }: RouteContext) {
         where: { id: tenant.id },
         data: {
           signatureData: payload.signatureData,
+          firstName: payload.firstName.trim(),
+          lastName: payload.lastName.trim(),
+          email: payload.email.trim().toLowerCase(),
+          phone: payload.phone.trim(),
+          dateOfBirth: new Date(`${payload.dateOfBirth}T00:00:00.000Z`),
           signed_at: new Date(),
           sectionData: {
             ...sectionData,
@@ -45,10 +66,19 @@ export async function POST(request: Request, { params }: RouteContext) {
               emergencyContactName: payload.emergencyContactName.trim(),
               emergencyContactPhone: payload.emergencyContactPhone.trim(),
               serviceEmail: payload.serviceEmail.trim().toLowerCase(),
+              initial: payload.initial?.trim() ?? "",
+              otherOccupants: payload.otherOccupants.trim(),
+              leaseType: payload.leaseType,
+              periodicFrequency: payload.periodicFrequency,
+              startDate: payload.startDate,
+              endDate: payload.endDate,
               acknowledgments: {
                 truth: payload.acknowledgeTruth,
                 electronicDelivery: payload.acknowledgeElectronicDelivery,
                 agreement: payload.acknowledgeAgreement,
+                actCopy: payload.acknowledgeActCopy,
+                signedLeaseCopy: payload.acknowledgeSignedLeaseCopy,
+                buildingRules: payload.acknowledgeBuildingRules,
               },
             },
           },

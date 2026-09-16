@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 type Tenant = {
@@ -103,6 +103,17 @@ export default function LeaseWizard() {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [notificationState, setNotificationState] = useState<Record<string, string>>({});
+  const [authenticated, setAuthenticated] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/session")
+      .then((response) => response.json())
+      .then((body: { authenticated?: boolean; landlord?: { name: string; email: string } | null }) => {
+        setAuthenticated(Boolean(body.authenticated));
+        if (body.landlord) setLandlord((current) => ({ ...current, name: current.name || body.landlord?.name || "", email: current.email || body.landlord?.email || "" }));
+      })
+      .catch(() => setAuthenticated(false));
+  }, []);
 
   const adultCount = useMemo(() => tenants.filter((tenant) => !tenant.isMinor && tenant.dateOfBirth).length, [tenants]);
   const currentStep = stepMeta[step];
@@ -140,8 +151,8 @@ export default function LeaseWizard() {
 
   function validateStep() {
     if (step === 0) {
-      if (!landlord.name || !landlord.email || landlord.password.length < 8) {
-        return "Add the landlord name, email, and a password with at least 8 characters.";
+      if (!landlord.name || !landlord.email || (!authenticated && landlord.password.length < 8)) {
+        return authenticated ? "Add the landlord name and email." : "Add the landlord name, email, and a password with at least 8 characters.";
       }
     }
 
