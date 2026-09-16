@@ -4,11 +4,12 @@ import { LeaseStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentLandlord } from "@/lib/auth";
 import { sendEmail } from "@/lib/mail";
+import { normalizeFormPData } from "@/lib/form-p";
 
-type TenantInput = { firstName: string; lastName: string; email: string; phone: string; dateOfBirth: string; isMinor: boolean };
+type TenantInput = { firstName: string; initial?: string; lastName: string; email: string; phone: string; dateOfBirth: string; isMinor: boolean };
 type LeasePayload = {
-  landlord: { name: string; email: string; phone: string; civicAddress: string; password: string };
-  sections: Record<string, Record<string, string>>;
+  landlord: { name: string; email: string; phone?: string; phoneHome?: string; phoneBusiness?: string; civicAddress: string; mailingAddress?: string; password?: string };
+  sections: Record<string, Record<string, unknown>>;
   tenants: TenantInput[];
 };
 
@@ -20,9 +21,8 @@ function hashPassword(password: string) {
 export async function POST(request: Request) {
   try {
     const payload = (await request.json()) as LeasePayload;
-    if (!payload.landlord?.name || !payload.landlord.email || !payload.landlord.password) {
-      return NextResponse.json({ error: "Landlord name, email, and password are required." }, { status: 400 });
-    }
+    const currentLandlord = await getCurrentLandlord();
+    if (!payload.landlord?.name || !payload.landlord.email || (!currentLandlord && !payload.landlord.password)) return NextResponse.json({ error: "Landlord name, email, and password are required." }, { status: 400 });
     if (!payload.tenants?.length) {
       return NextResponse.json({ error: "Add at least one tenant or occupant before submitting." }, { status: 400 });
     }
@@ -40,20 +40,19 @@ export async function POST(request: Request) {
         dateOfBirth: new Date(`${tenant.dateOfBirth}T00:00:00.000Z`),
         isMinor: tenant.isMinor,
         accessToken,
-        sectionData: { role: tenant.isMinor ? "Occupant" : "Tenant", hasSigningRights: !tenant.isMinor, signingOrder: tenant.isMinor ? null : adultIndex },
+        sectionData: { initial: tenant.initial || "", role: tenant.isMinor ? "Occupant" : "Tenant", hasSigningRights: !tenant.isMinor, signingOrder: tenant.isMinor ? null : adultIndex },
       };
     });
 
-    const currentLandlord = await getCurrentLandlord();
     const lease = await prisma.$transaction(async (transaction) => {
       const landlord = currentLandlord ?? await transaction.landlord.upsert({
         where: { email: payload.landlord.email.trim().toLowerCase() },
         update: { name: payload.landlord.name, phone: payload.landlord.phone || null, civicAddress: payload.landlord.civicAddress || null },
-        create: { name: payload.landlord.name, email: payload.landlord.email.trim().toLowerCase(), passwordHash: hashPassword(payload.landlord.password), phone: payload.landlord.phone || null, civicAddress: payload.landlord.civicAddress || null },
+        create: { name: payload.landlord.name, email: payload.landlord.email.trim().toLowerCase(), passwordHash: hashPassword(payload.landlord.password ?? ""), phone: payload.landlord.phone || payload.landlord.phoneHome || payload.landlord.phoneBusiness || null, civicAddress: payload.landlord.civicAddress || null },
       });
 
       return transaction.lease.create({
-        data: { landlordId: landlord.id, status: adultCount ? LeaseStatus.PENDING_TENANTS : LeaseStatus.PENDING_LANDLORD, formData: payload.sections, tenants: { create: tenantData } },
+        data: { landlordId: landlord.id, status: adultCount ? LeaseStatus.PENDING_TENANTS : LeaseStatus.PENDING_LANDLORD, formData: normalizeFormPData(payload.sections), tenants: { create: tenantData } },
         include: { tenants: true },
       });
     });

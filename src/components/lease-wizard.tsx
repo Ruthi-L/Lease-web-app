@@ -562,6 +562,30 @@ export default function LeaseWizard() {
             Tenant responsibilities
             <textarea value={String(formData.section16?.tenantResponsibilities ?? "")} onChange={(event) => updateFormValue("section16", "tenantResponsibilities", event.target.value)} placeholder="Tenant insurance, lockout charges, assignment/sublet fees, maintenance responsibility" />
           </label>
+          <label className="full-width checkbox-row">
+            <input type="checkbox" checked={Boolean(formData.section13?.stove)} onChange={(event) => updateFormValue("section13", "stove", event.target.checked)} />
+            Stove included
+          </label>
+          <label className="full-width checkbox-row">
+            <input type="checkbox" checked={Boolean(formData.section13?.refrigerator)} onChange={(event) => updateFormValue("section13", "refrigerator", event.target.checked)} />
+            Refrigerator included
+          </label>
+          <label className="full-width checkbox-row">
+            <input type="checkbox" checked={Boolean(formData.section13?.washerDryer)} onChange={(event) => updateFormValue("section13", "washerDryer", event.target.checked)} />
+            Washer / dryer included
+          </label>
+          <label className="full-width checkbox-row">
+            <input type="checkbox" checked={Boolean(formData.section13?.dishwasher)} onChange={(event) => updateFormValue("section13", "dishwasher", event.target.checked)} />
+            Dishwasher included
+          </label>
+          <label className="full-width">
+            Services excluded from rent
+            <textarea value={String(formData.section13?.excludedServices ?? "")} onChange={(event) => updateFormValue("section13", "excludedServices", event.target.value)} placeholder="Heat, water, electricity, parking, Wi-Fi, lawn care, snow removal, garbage" />
+          </label>
+          <label className="full-width">
+            Additional obligations (Section 14)
+            <textarea value={String(formData.section14?.additionalObligations ?? "")} onChange={(event) => updateFormValue("section14", "additionalObligations", event.target.value)} />
+          </label>
           <label>
             Security deposit required
             <select value={String(formData.section18?.depositRequired ?? "")} onChange={(event) => updateFormValue("section18", "depositRequired", event.target.value)}>
@@ -595,8 +619,60 @@ export default function LeaseWizard() {
             <textarea value={String(formData.section23?.noticeToQuit ?? "")} onChange={(event) => updateFormValue("section23", "noticeToQuit", event.target.value)} />
           </label>
           <label className="full-width">
+            Statutory conditions (Section 17)
+            <textarea value={String(formData.section17?.statutoryConditions ?? "")} onChange={(event) => updateFormValue("section17", "statutoryConditions", event.target.value)} placeholder="The statutory conditions apply to this lease." />
+          </label>
+          <label className="full-width checkbox-row">
+            <input type="checkbox" checked={Boolean(formData.section17A?.buildingRulesAttached)} onChange={(event) => updateFormValue("section17A", "buildingRulesAttached", event.target.checked)} />
+            Building rules attached and provided to tenant
+          </label>
+          <label>
+            Assignment and subletting
+            <select value={String(formData.section18?.assignmentTerms ?? "")} onChange={(event) => updateFormValue("section18", "assignmentTerms", event.target.value)}>
+              <option value="">Select</option>
+              <option value="Permitted with written consent">Permitted with written consent</option>
+              <option value="Not permitted except as allowed by law">Not permitted except as allowed by law</option>
+            </select>
+          </label>
+          <label className="full-width">
+            Rental arrears rules (Section 19)
+            <textarea value={String(formData.section19?.arrearsRules ?? "")} onChange={(event) => updateFormValue("section19", "arrearsRules", event.target.value)} placeholder="The statutory 15-day notice and opportunity to pay apply." />
+          </label>
+          <label>
+            Tenant notice to quit table
+            <textarea value={String(formData.section20?.tenantNoticeTable ?? "")} onChange={(event) => updateFormValue("section20", "tenantNoticeTable", event.target.value)} />
+          </label>
+          <label>
+            Landlord notice to quit table
+            <textarea value={String(formData.section21?.landlordNoticeTable ?? "")} onChange={(event) => updateFormValue("section21", "landlordNoticeTable", event.target.value)} />
+          </label>
+          <label className="full-width">
+            Binding clauses (Section 22)
+            <textarea value={String(formData.section22?.bindingClauses ?? "")} onChange={(event) => updateFormValue("section22", "bindingClauses", event.target.value)} />
+          </label>
+          <label className="full-width">
+            Tenant responsibility disclaimer (Section 23)
+            <textarea value={String(formData.section23?.responsibilityDisclaimer ?? "")} onChange={(event) => updateFormValue("section23", "responsibilityDisclaimer", event.target.value)} />
+          </label>
+          <label>
+            Lease signature date
+            <input type="date" value={String(formData.section24?.signatureDate ?? "")} onChange={(event) => updateFormValue("section24", "signatureDate", event.target.value)} />
+          </label>
+          <label className="full-width checkbox-row">
+            <input type="checkbox" checked={Boolean(formData.section25?.signedLeaseCopy)} onChange={(event) => updateFormValue("section25", "signedLeaseCopy", event.target.checked)} />
+            Signed lease copy will be provided to every tenant
+          </label>
+          <label className="full-width checkbox-row">
+            <input type="checkbox" checked={Boolean(formData.section25?.actCopy)} onChange={(event) => updateFormValue("section25", "actCopy", event.target.checked)} />
+            Residential Tenancies Act copy or access provided
+          </label>
+          <label className="full-width checkbox-row">
+            <input type="checkbox" checked={Boolean(formData.section25?.buildingRulesCopy)} onChange={(event) => updateFormValue("section25", "buildingRulesCopy", event.target.checked)} />
+            Building rules copy provided
+          </label>
+          <label className="full-width">
             Statutory acknowledgment
-            <textarea value={String(formData.section26?.statutoryConditions ?? "")} onChange={(event) => updateFormValue("section26", "statutoryConditions", event.target.value)} />
+            <textarea value={String(formData.section26?.statutoryConditions ?? "")} onChange={(event) => updateFormValue("section26", "statutoryConditions", event.target.value)} placeholder="The parties acknowledge the lease terms, statutory conditions, and attachments." />
           </label>
           <label>
             Act delivery format

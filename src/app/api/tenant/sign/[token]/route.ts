@@ -70,8 +70,10 @@ export async function POST(request: Request, { params }: RouteContext) {
           id: completedLease.id,
           createdAt: completedLease.createdAt,
           landlord: { name: completedLease.landlord.name, email: completedLease.landlord.email },
+          landlordSignatureData: completedLease.landlordSignatureData,
+          landlordSignedAt: completedLease.landlordSignedAt,
           formData: completedLease.formData,
-          tenants: completedLease.tenants.map((candidate) => ({ firstName: candidate.firstName, lastName: candidate.lastName, email: candidate.email, isMinor: candidate.isMinor })),
+          tenants: completedLease.tenants.map((candidate) => ({ firstName: candidate.firstName, lastName: candidate.lastName, email: candidate.email, isMinor: candidate.isMinor, signatureData: candidate.signatureData, signedAt: candidate.signed_at })),
         });
 
         await Promise.all([

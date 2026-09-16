@@ -21,8 +21,10 @@ export async function POST(request: Request, { params }: RouteContext) {
       id: updatedLease.id,
       createdAt: updatedLease.createdAt,
       landlord: { name: lease.landlord.name, email: lease.landlord.email },
+      landlordSignatureData: updatedLease.landlordSignatureData,
+      landlordSignedAt: updatedLease.landlordSignedAt,
       formData: updatedLease.formData,
-      tenants: lease.tenants.map((tenant) => ({ firstName: tenant.firstName, lastName: tenant.lastName, email: tenant.email, isMinor: tenant.isMinor })),
+      tenants: lease.tenants.map((tenant) => ({ firstName: tenant.firstName, lastName: tenant.lastName, email: tenant.email, isMinor: tenant.isMinor, signatureData: tenant.signatureData, signedAt: tenant.signed_at })),
     });
 
     await Promise.all([
