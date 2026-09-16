@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import FormPSectionPage from "@/components/form-p-section-page";
 
 type Tenant = {
   firstName: string;
@@ -40,11 +41,23 @@ const emptyTenant: Tenant = {
 };
 
 const stepMeta = [
-  { id: "1", title: "Parties", prompt: "Identify the landlord and the people who will be occupying the property." },
-  { id: "2-3", title: "Occupants & Premises", prompt: "List the other occupants and describe the rental premises." },
-  { id: "4-9", title: "Contacts & Service", prompt: "Capture emergency contacts, agent, building contact, and service emails." },
-  { id: "11-16", title: "Lease Type, Rent & Utilities", prompt: "Record the tenancy type, rent, utilities, and incentives." },
-  { id: "18-26", title: "Deposits, Acknowledgments & Notices", prompt: "Document deposits, inspections, notice periods, and the statutory acknowledgment." },
+  { id: "1", page: "landlord", title: "Section 1 · Landlord", prompt: "Enter the landlord details and service contact information." },
+  { id: "1T", page: "tenants", title: "Section 1 · Tenants", prompt: "Add every tenant together. Adult tenants receive signing links." },
+  { id: "2", page: "occupants", title: "Section 2 · Occupants", prompt: "Name everyone else who will live in the premises." },
+  { id: "3", page: "premises", title: "Section 3 · Premises", prompt: "Describe the rental property and tenant contact address." },
+  { id: "4", page: "emergency", title: "Section 4 · Emergency contact", prompt: "Add next-of-kin and emergency contact details." },
+  { id: "5-6", page: "contacts", title: "Sections 5–6 · Property contacts", prompt: "Add the property manager, agent, and building superintendent." },
+  { id: "7A", page: "service", title: "Section 7A · Electronic service", prompt: "Enter the landlord address for electronic service under the Act." },
+  { id: "8", page: "lease", title: "Section 8 · Lease type", prompt: "Choose periodic 8A or fixed-term 8B and complete its dates." },
+  { id: "9", page: "housing", title: "Section 9 · Public housing", prompt: "Record public housing status and program eligibility." },
+  { id: "10", page: "rent", title: "Section 10 · Rent", prompt: "Set rent, payment method, due date, and late-fee terms." },
+  { id: "11", page: "rentIncrease", title: "Section 11 · Rent increases", prompt: "Review the statutory restrictions and notice periods." },
+  { id: "13", page: "services", title: "Section 13 · Services", prompt: "Select included appliances, utilities, and tenant responsibilities." },
+  { id: "16", page: "inspection", title: "Section 16 · Inspection report", prompt: "Record the inspection report status." },
+  { id: "17", page: "conditions", title: "Section 17 · Statutory conditions", prompt: "Record statutory conditions and building rules." },
+  { id: "18", page: "arrears", title: "Section 18 · Rental arrears", prompt: "Review the statutory 15-day arrears notice policy." },
+  { id: "19", page: "notice", title: "Section 19 · Tenant notice to quit", prompt: "Record the tenant notice-to-quit rules." },
+  { id: "26", page: "attachments", title: "Section 26 · Attachments", prompt: "Confirm receipt of the Act, signed lease, and building rules." },
   { id: "Review", title: "Review & Submit", prompt: "Confirm the lease is complete and ready to send for signature." },
 ] as const;
 
@@ -163,9 +176,11 @@ export default function LeaseWizard() {
     }
 
     if (step === 2) {
-      if (!formData.section2?.otherOccupants && !formData.section3?.premisesAddress) {
-        return "Add the other occupants and premises address before continuing.";
-      }
+      if (!formData.section2?.otherOccupants) return "List the other adults or children who will occupy the premises, or enter None.";
+    }
+
+    if (step === 3 && !formData.section3?.premisesAddress) {
+      return "Add the rental premises address before continuing.";
     }
 
     return "";
@@ -232,6 +247,13 @@ export default function LeaseWizard() {
   }
 
   function renderStepContent() {
+    if (step === stepMeta.length - 1) return renderLegacyStepContent();
+    const currentPage = stepMeta[step];
+    if (!("page" in currentPage)) return renderLegacyStepContent();
+    return <FormPSectionPage page={currentPage.page} landlord={landlord} setLandlord={setLandlord} tenants={tenants} updateTenant={updateTenant} addTenant={addTenant} removeTenant={removeTenant} formData={formData} updateFormValue={updateFormValue} />;
+  }
+
+  function renderLegacyStepContent() {
     if (step === 0) {
       return (
         <div className="field-grid">
