@@ -12,8 +12,8 @@ button { cursor: pointer; }
 .eyebrow { display: block; color: #8fc5a5; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
 .sidebar h1 { max-width: 330px; margin: 18px 0; font: 400 clamp(34px, 4vw, 58px)/1.02 Georgia, serif; letter-spacing: 0; }
 .sidebar-copy { max-width: 330px; color: #b7c8bc; line-height: 1.7; font-size: 14px; }
-.sidebar-login-link { display: inline-flex; align-items: center; gap: 10px; margin: 20px 0 26px; color: #f4f8f1; font-size: 14px; font-weight: 700; text-decoration: none; }
-.sidebar-login-link:hover { color: #d5e8d9; }
+.sidebar-login-button { display: inline-flex; align-items: center; justify-content: space-between; gap: 28px; margin: 20px 0 26px; padding: 12px 15px; border: 1px solid rgba(244,248,241,.45); color: #f4f8f1; font-size: 14px; font-weight: 700; text-decoration: none; }
+.sidebar-login-button:hover { background: rgba(244,248,241,.1); border-color: #f4f8f1; }
 .progress-list { display: grid; gap: 5px; margin-top: 48px; position: relative; z-index: 1; }
 .progress-item { color: #91a69a; background: transparent; border: 0; display: grid; grid-template-columns: 42px 1fr; gap: 10px; padding: 9px 0; text-align: left; align-items: center; }
 .progress-item span { font-size: 11px; }
