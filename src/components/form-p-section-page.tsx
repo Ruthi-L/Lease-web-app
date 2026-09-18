@@ -21,9 +21,10 @@ type Props = {
 export default function FormPSectionPage({ page, landlord, setLandlord, tenants, updateTenant, addTenant, removeTenant, formData, updateFormValue }: Props) {
   const field = (label: string, value: string, onChange: (value: string) => void, type = "text") => <label>{label}<input type={type} value={value} onChange={(event) => onChange(event.target.value)} /></label>;
   const area = (label: string, value: string, onChange: (value: string) => void) => <label className="full-width">{label}<textarea value={value} onChange={(event) => onChange(event.target.value)} /></label>;
-  const section = (id: string) => formData[id] ?? {};
+  const sectionKey = (id: string) => (id.startsWith("section") ? id : `section${id}`);
+  const section = (id: string) => formData[sectionKey(id)] ?? {};
   const value = (id: string, key: string) => String(section(id)[key] ?? "");
-  const setValue = (id: string, key: string, next: string | boolean) => updateFormValue(id, key, next);
+  const setValue = (id: string, key: string, next: string | boolean) => updateFormValue(sectionKey(id), key, next);
   const check = (id: string, key: string, label: string) => <label className="checkbox-row"><input type="checkbox" checked={Boolean(section(id)[key])} onChange={(event) => setValue(id, key, event.target.checked)} />{label}</label>;
 
   if (page === "landlord") return <div className="field-grid">

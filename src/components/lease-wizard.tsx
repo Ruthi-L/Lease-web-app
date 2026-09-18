@@ -823,7 +823,16 @@ export default function LeaseWizard() {
           <span className="save-state">Draft · saved locally</span>
         </header>
 
-        <form onSubmit={submit}>
+        <form
+          onSubmit={submit}
+          onKeyDown={(event) => {
+            const isAdvanceKey = event.key === "Enter" && !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey;
+            if (isAdvanceKey && step < stepMeta.length - 1) {
+              event.preventDefault();
+              next();
+            }
+          }}
+        >
           <div className="form-content">
             {renderStepContent()}
             {error && <div className="error-message">{error}</div>}
