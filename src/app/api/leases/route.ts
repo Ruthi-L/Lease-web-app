@@ -17,6 +17,19 @@ function hashPassword(password: string) {
   return `${salt}:${scryptSync(password, salt, 64).toString("hex")}`;
 }
 
+function parseDateInput(value: string, field: string) {
+  if (!value || typeof value !== "string") {
+    throw new Error(`Please provide a valid ${field}.`);
+  }
+
+  const date = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`Please provide a valid ${field}.`);
+  }
+
+  return date;
+}
+
 export async function POST(request: Request) {
   try {
     const payload = (await request.json()) as LeasePayload;
@@ -26,9 +39,35 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Add at least one tenant or occupant before submitting." }, { status: 400 });
     }
 
-    const adultCount = payload.tenants.filter((tenant) => !tenant.isMinor).length;
+    const normalizedLandlord = {
+      name: payload.landlord.name.trim(),
+      email: payload.landlord.email.trim().toLowerCase(),
+      phone: payload.landlord.phone || payload.landlord.phoneHome || payload.landlord.phoneBusiness || null,
+      civicAddress: payload.landlord.civicAddress?.trim() || null,
+      mailingAddress: payload.landlord.mailingAddress?.trim() || null,
+    };
+
+    const normalizedTenants = payload.tenants.map((tenant, index) => {
+      const cleaned = {
+        firstName: tenant.firstName.trim(),
+        initial: tenant.initial?.trim() ?? "",
+        lastName: tenant.lastName.trim(),
+        email: tenant.email.trim().toLowerCase(),
+        phone: tenant.phone?.trim() || null,
+        dateOfBirth: parseDateInput(tenant.dateOfBirth, `date of birth for tenant ${index + 1}`),
+        isMinor: Boolean(tenant.isMinor),
+      };
+
+      if (!cleaned.firstName || !cleaned.lastName || !cleaned.email || (!cleaned.isMinor && !cleaned.phone)) {
+        throw new Error("Complete every tenant's full name, email, DOB, and adult phone number before saving.");
+      }
+
+      return cleaned;
+    });
+
+    const adultCount = normalizedTenants.filter((tenant) => !tenant.isMinor).length;
     let adultIndex = 0;
-    const tenantData = payload.tenants.map((tenant) => {
+    const tenantData = normalizedTenants.map((tenant) => {
       const accessToken = tenant.isMinor ? null : randomBytes(32).toString("hex");
       adultIndex += tenant.isMinor ? 0 : 1;
       return {
@@ -36,7 +75,7 @@ export async function POST(request: Request) {
         lastName: tenant.lastName,
         email: tenant.email,
         phone: tenant.phone || null,
-        dateOfBirth: new Date(`${tenant.dateOfBirth}T00:00:00.000Z`),
+        dateOfBirth: tenant.dateOfBirth,
         isMinor: tenant.isMinor,
         accessToken,
         sectionData: { initial: tenant.initial || "", role: tenant.isMinor ? "Occupant" : "Tenant", hasSigningRights: !tenant.isMinor, signingOrder: tenant.isMinor ? null : adultIndex },
@@ -45,13 +84,28 @@ export async function POST(request: Request) {
 
     const lease = await prisma.$transaction(async (transaction) => {
       const landlord = currentLandlord ?? await transaction.landlord.upsert({
-        where: { email: payload.landlord.email.trim().toLowerCase() },
-        update: { name: payload.landlord.name, phone: payload.landlord.phone || null, civicAddress: payload.landlord.civicAddress || null },
-        create: { name: payload.landlord.name, email: payload.landlord.email.trim().toLowerCase(), passwordHash: hashPassword(payload.landlord.password ?? ""), phone: payload.landlord.phone || payload.landlord.phoneHome || payload.landlord.phoneBusiness || null, civicAddress: payload.landlord.civicAddress || null },
+        where: { email: normalizedLandlord.email },
+        update: {
+          name: normalizedLandlord.name,
+          phone: normalizedLandlord.phone,
+          civicAddress: normalizedLandlord.civicAddress,
+        },
+        create: {
+          name: normalizedLandlord.name,
+          email: normalizedLandlord.email,
+          passwordHash: hashPassword(payload.landlord.password ?? ""),
+          phone: normalizedLandlord.phone,
+          civicAddress: normalizedLandlord.civicAddress,
+        },
       });
 
       return transaction.lease.create({
-        data: { landlordId: landlord.id, status: adultCount ? "PENDING_TENANTS" : "PENDING_LANDLORD", formData: normalizeFormPData(payload.sections), tenants: { create: tenantData } },
+        data: {
+          landlordId: landlord.id,
+          status: adultCount ? "PENDING_TENANTS" : "PENDING_LANDLORD",
+          formData: normalizeFormPData(payload.sections),
+          tenants: { create: tenantData },
+        },
         include: { tenants: true },
       });
     });
