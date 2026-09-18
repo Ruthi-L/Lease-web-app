@@ -3,7 +3,7 @@ import { POST } from './src/app/api/leases/route.ts';
 const payload = {
   landlord: {
     name: 'Test Landlord',
-    email: 'test@example.com',
+    email: 'ruthilokh@gmail.com',
     password: 'password123',
     civicAddress: '1 Main St',
     phoneHome: '555-5555'

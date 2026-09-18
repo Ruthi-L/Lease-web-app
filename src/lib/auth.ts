@@ -10,10 +10,20 @@ export function hashPassword(password: string) {
 }
 
 export function verifyPassword(password: string, storedHash: string) {
-  const [salt, hash] = storedHash.split(":");
-  if (!salt || !hash) return false;
-  const candidate = scryptSync(password, salt, 64);
-  return timingSafeEqual(candidate, Buffer.from(hash, "hex"));
+  if (!storedHash) return false;
+
+  if (storedHash.includes(":")) {
+    const [salt, hash] = storedHash.split(":");
+    if (!salt || !hash) return false;
+    try {
+      const candidate = scryptSync(password, salt, 64);
+      return timingSafeEqual(candidate, Buffer.from(hash, "hex"));
+    } catch {
+      return false;
+    }
+  }
+
+  return password === storedHash;
 }
 
 export async function createSession(landlordId: string) {
